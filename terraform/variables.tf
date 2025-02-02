@@ -57,17 +57,20 @@ variable "cognito_user_pool_id" {
   type        = string
 }
 
+variable "db_name" {
+  description = "The name for the database"
+  type        = string
+}
+
 variable "db_username" {
   description = "The username for the database"
   type        = string
-  default = "postgres"
 }
 
 variable "db_password" {
   description = "The password for the database"
   type        = string
-  sensitive   = true  # Sensitive, don't want to expose the password in logs or outputs
-  default = "mypassword"
+  sensitive   = true
 }
 
 variable "db_port" {

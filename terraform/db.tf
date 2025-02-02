@@ -11,7 +11,7 @@ resource "aws_db_subnet_group" "appdb" {
 
 resource "aws_db_instance" "appdb" {
   identifier     = "${var.project}-db-instance"
-  db_name        = "${var.project}-db"
+  db_name        = var.db_name
   instance_class = "db.t3.micro"
 
   allocated_storage     = 10
