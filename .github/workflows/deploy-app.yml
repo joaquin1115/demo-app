@@ -51,17 +51,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
-
-      # Deploy Amplify and capture outputs
-      - name: Deploy Amplify backend
-        working-directory: ./src/frontend
-        run: |
-          npm install ampx
-          aws configure sso
-          npx ampx sandbox
-          echo "COGNITO_USER_POOL_ID=$(jq -r '.userPoolId' amplify_outputs.json)" >> $GITHUB_ENV
-          echo "COGNITO_USER_POOL_CLIENT_ID=$(jq -r '.userPoolClientId' amplify_outputs.json)" >> $GITHUB_ENV
-
+      
       # Initialize and apply Terraform
       - name: Deploy Terraform project
         working-directory: ./terraform
@@ -114,6 +104,21 @@ jobs:
       - name: Build and deploy frontend
         working-directory: ./src/frontend
         run: |
+          # Get Cognito user pool ID and client ID from Terraform output
+          COGNITO_USER_POOL_ID=$(terraform -chdir=../../terraform output -raw user_pool_id)
+          COGNITO_USER_POOL_CLIENT_ID=$(terraform -chdir=../../terraform output -raw user_pool_client_id)
+
+          # Create environment file
+          cat << EOF > src/environments/environment.prod.ts
+          export const environment = {
+            production: true,
+            cognito: {
+              userPoolId: '$COGNITO_USER_POOL_ID',
+              userPoolClientId: '$COGNITO_USER_POOL_CLIENT_ID'
+            }
+          };
+          EOF
+
           # Install dependencies and build
           npm install
           npm run build

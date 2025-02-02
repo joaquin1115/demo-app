@@ -16,3 +16,43 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
   ]
 };
+
+export const awsConfig = {
+  Auth: {
+    Cognito: {
+      userPoolId: process.env['COGNITO_USER_POOL_ID'] ?? '',
+      userPoolClientId: process.env['COGNITO_USER_POOL_CLIENT_ID'] ?? '',
+      loginWith: {
+        email: true,
+      },
+      signUpVerificationMethod: "code",
+      userAttributes: {
+        email: {
+          required: true,
+        },
+        "custom:employee_id": {
+          required: false,
+        },
+        "custom:dni": {
+          required: false,
+        },
+        "custom:area": {
+          required: false,
+        },
+        "custom:position": {
+          required: false,
+        },
+        "custom:is_representative": {
+          required: false,
+        },
+      },
+      passwordFormat: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireNumbers: true,
+        requireSpecialCharacters: true,
+      },
+    },
+  },
+};

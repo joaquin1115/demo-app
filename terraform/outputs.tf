@@ -40,3 +40,11 @@ output "cloudfront_distribution_id" {
 output "ecr_repository_url" {
   value = aws_ecr_repository.my_ecr_repo.repository_url
 }
+
+output "user_pool_id" {
+  value = aws_cognito_user_pool.main.id
+}
+
+output "user_pool_client_id" {
+  value = aws_cognito_user_pool_client.client.id
+}

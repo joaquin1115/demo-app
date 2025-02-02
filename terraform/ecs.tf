@@ -25,7 +25,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name  = "web"
-      image = "public.ecr.aws/ecs-sample-image/amazon-ecs-sample:latest"
+      image = "${aws_ecr_repository.my_ecr_repo.repository_url}:latest"
       portMappings = [
         {
           containerPort = var.app_port
@@ -34,6 +34,10 @@ resource "aws_ecs_task_definition" "service" {
       ]
       essential = true
       environment = [
+        {
+          name  = "SPRING_PROFILES_ACTIVE"
+          value = "prod"
+        },
         {
           name  = "DB_USERNAME"
           value = "${aws_db_instance.appdb.username}"

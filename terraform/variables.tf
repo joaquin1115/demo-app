@@ -47,16 +47,6 @@ variable "project" {
   default = "fullstack-web-app"
 }
 
-variable "cognito_user_pool_client_id" {
-  description = "Cognito User Pool Client ID"
-  type        = string
-}
-
-variable "cognito_user_pool_id" {
-  description = "Cognito User Pool ID"
-  type        = string
-}
-
 variable "db_name" {
   description = "The name for the database"
   type        = string

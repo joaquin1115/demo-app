@@ -2,7 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
 import {AmplifyAuthenticatorModule, AuthenticatorService} from '@aws-amplify/ui-angular';
-import outputs from './amplify_outputs.json';
+import { awsConfig } from '../../app.config';
 import { I18n } from 'aws-amplify/utils';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 import { translations } from '@aws-amplify/ui-angular';
@@ -34,7 +34,7 @@ export class LoginComponent implements OnInit{
     private authService: AuthService,
     private router: Router,
   ) {
-    Amplify.configure(outputs);
+    Amplify.configure(awsConfig);
   }
 
   ngOnInit() {
