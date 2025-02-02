@@ -19,7 +19,7 @@ resource "aws_db_instance" "appdb" {
   storage_type          = "gp2"
 
   engine              = "postgres"
-  engine_version      = "14.5"
+  engine_version      = "17.2"
   username            = var.db_username
   password            = var.db_password
   port                = var.db_port
