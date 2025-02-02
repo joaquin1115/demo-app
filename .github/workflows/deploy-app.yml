@@ -57,9 +57,7 @@ jobs:
         working-directory: ./terraform
         run: |
           terraform init
-          terraform plan -var="cognito_user_pool_id=${{ env.COGNITO_USER_POOL_ID }}" \
-                        -var="cognito_user_pool_client_id=${{ env.COGNITO_USER_POOL_CLIENT_ID }}" \
-                        -var="aws_region=${{ env.AWS_REGION }}" \
+          terraform plan -var="aws_region=${{ env.AWS_REGION }}" \
                         -var="db_name=${{ secrets.DB_NAME }}" \
                         -var="db_username=${{ secrets.DB_USERNAME }}" \
                         -var="db_password=${{ secrets.DB_PASSWORD }}" \
