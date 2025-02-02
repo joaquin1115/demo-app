@@ -57,6 +57,7 @@ jobs:
         working-directory: ./src/frontend
         run: |
           npm install ampx
+          aws configure sso
           npx ampx sandbox
           echo "COGNITO_USER_POOL_ID=$(jq -r '.userPoolId' amplify_outputs.json)" >> $GITHUB_ENV
           echo "COGNITO_USER_POOL_CLIENT_ID=$(jq -r '.userPoolClientId' amplify_outputs.json)" >> $GITHUB_ENV
