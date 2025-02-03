@@ -77,13 +77,16 @@ jobs:
           ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
           echo "yes"
           MIGRATION_TAG="${ECR_REPO}:migration"
-          
+
+          echo "ok"
           # Create Dockerfile for migration
           cat > Dockerfile.migration << 'EOF'
           FROM postgres:15
           COPY ./init.sql /app/database/
           COPY ./data/ /app/database/data/
           EOF
+
+          echo "okkk"
           
           # Build and push migration image
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO
