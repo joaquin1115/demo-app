@@ -73,8 +73,10 @@ jobs:
         working-directory: ./app-code/database
         run: |
           # Get ECR repository URL from Terraform output
+          echo "$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)"
           echo "no"
           ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
+          echo "${ECR_REPO}"
           echo "yes"
           MIGRATION_TAG="${ECR_REPO}:migration"
 
