@@ -113,7 +113,7 @@ jobs:
             --container-definitions '[
               {
                 "name": "db-migration",
-                "image": "postgres:15",
+                "image": "'${ECR_REPO}:migration'",
                 "essential": true,
                 "environment": [
                   {
