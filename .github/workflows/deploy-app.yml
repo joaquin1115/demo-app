@@ -90,8 +90,11 @@ jobs:
           
           # Build and push migration image
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO
+          echo "ok?"
           docker build -f Dockerfile.migration -t $MIGRATION_TAG .
+          echo "ok i guess"
           docker push $MIGRATION_TAG
+          echo "oh"
 
       # Deploy database
       - name: Deploy database
