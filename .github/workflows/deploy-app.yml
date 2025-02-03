@@ -75,7 +75,7 @@ jobs:
           # Get ECR repository URL from Terraform output
           echo "$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)"
           echo "no"
-          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
+          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url 2>/dev/null | head -n 1 | tr -d '\n')
           echo "${ECR_REPO}"
           echo "yes"
           MIGRATION_TAG="${ECR_REPO}:migration"
