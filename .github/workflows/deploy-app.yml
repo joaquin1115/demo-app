@@ -51,6 +51,7 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
       
       # Initialize and apply Terraform
       - name: Deploy Terraform project
@@ -73,9 +74,9 @@ jobs:
         working-directory: ./app-code/database
         run: |
           # Get ECR repository URL from Terraform output
-          echo "$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url 2>/dev/null | head -n 1 | tr -d '\n')"
+          echo "$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)"
           echo "no"
-          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url 2>/dev/null | head -n 1 | tr -d '\n')
+          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
           echo "${ECR_REPO}"
           echo "yes"
           MIGRATION_TAG="${ECR_REPO}:migration"
