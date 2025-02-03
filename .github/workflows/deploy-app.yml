@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
   # push:
   #   branches: [main]
-  #   paths: ["terraform/**"]
+  #   paths: ["infrastructure/app-infrastructure/**"]
 
   # pull_request:
   #   branches: [main]
-  #   paths: ["terraform/**"]
+  #   paths: ["infrastructure/app-infrastructure/**"]
 
 env:
   AWS_REGION: "us-east-1"
@@ -54,9 +54,12 @@ jobs:
       
       # Initialize and apply Terraform
       - name: Deploy Terraform project
-        working-directory: ./terraform
+        working-directory: ./infrastructure/app-infrastructure
         run: |
-          terraform init
+          terraform init \
+            -backend-config="bucket=${{ secrets.STATE_BUCKET }}" \
+            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ secrets.LOCK_TABLE }}"
           terraform plan -var="aws_region=${{ env.AWS_REGION }}" \
                         -var="db_name=${{ secrets.DB_NAME }}" \
                         -var="db_username=${{ secrets.DB_USERNAME }}" \
@@ -76,17 +79,17 @@ jobs:
           sudo apt-get update && sudo apt-get install -y postgresql-client
           
           # Deploy schema and data
-          PGPASSWORD=$DB_PASSWORD psql --set csv_path=$(realpath ./src/database/data/) -h $DB_ENDPOINT -U $DB_USER -d $DB_NAME -f ./src/database/init.sql
+          PGPASSWORD=$DB_PASSWORD psql --set csv_path=$(realpath ./app-code/database/data/) -h $DB_ENDPOINT -U $DB_USER -d $DB_NAME -f ./app-code/database/init.sql
 
       # Build and deploy backend
       - name: Build and deploy backend
-        working-directory: ./src/backend
+        working-directory: ./app-code/backend
         run: |
           # Build the application
           ./mvnw clean package -DskipTests
           
           # Get ECR repository URL from Terraform output
-          ECR_REPO=$(terraform -chdir=../../terraform output -raw ecr_repository_url)
+          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
           
           # Build and push Docker image
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO
@@ -94,17 +97,17 @@ jobs:
           docker push $ECR_REPO:latest
           
           # Update ECS service to pick up new image
-          aws ecs update-service --cluster $(terraform -chdir=../../terraform output -raw ecs_cluster_name) \
-                                --service $(terraform -chdir=../../terraform output -raw ecs_service_name) \
+          aws ecs update-service --cluster $(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_cluster_name) \
+                                --service $(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_service_name) \
                                 --force-new-deployment
 
       # Build and deploy frontend
       - name: Build and deploy frontend
-        working-directory: ./src/frontend
+        working-directory: ./app-code/frontend
         run: |
           # Get Cognito user pool ID and client ID from Terraform output
-          COGNITO_USER_POOL_ID=$(terraform -chdir=../../terraform output -raw user_pool_id)
-          COGNITO_USER_POOL_CLIENT_ID=$(terraform -chdir=../../terraform output -raw user_pool_client_id)
+          COGNITO_USER_POOL_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw user_pool_id)
+          COGNITO_USER_POOL_CLIENT_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw user_pool_client_id)
 
           # Create environment file
           cat << EOF > src/environments/environment.prod.ts
@@ -122,11 +125,11 @@ jobs:
           npm run build
           
           # Get S3 bucket name from Terraform output
-          S3_BUCKET=$(terraform -chdir=../../terraform output -raw frontend_bucket_name)
+          S3_BUCKET=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw frontend_bucket_name)
           
           # Deploy to S3
           aws s3 sync build/ s3://$S3_BUCKET/
           
           # Invalidate CloudFront cache
-          DISTRIBUTION_ID=$(terraform -chdir=../../terraform output -raw cloudfront_distribution_id)
+          DISTRIBUTION_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw cloudfront_distribution_id)
           aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
