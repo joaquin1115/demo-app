@@ -71,8 +71,9 @@ jobs:
 
       # Deploy database
       - name: Deploy database
+        working-directory: ./app-code/database
         run: |
-          DB_ENDPOINT=$(terraform -chdir=./terraform output -raw db_endpoint)
+          DB_ENDPOINT=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw db_endpoint)
           DB_NAME=${{ secrets.DB_NAME }}
           DB_USER=${{ secrets.DB_USERNAME }}
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
@@ -81,7 +82,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y postgresql-client
           
           # Deploy schema and data
-          PGPASSWORD=$DB_PASSWORD psql --set csv_path=$(realpath ./app-code/database/data/) -h $DB_ENDPOINT -U $DB_USER -d $DB_NAME -f ./app-code/database/init.sql
+          PGPASSWORD=$DB_PASSWORD psql --set csv_path=$(realpath ./data/) -h $DB_ENDPOINT -U $DB_USER -d $DB_NAME -f ./init.sql
 
       # Build and deploy backend
       - name: Build and deploy backend
