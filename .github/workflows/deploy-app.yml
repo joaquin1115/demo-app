@@ -57,9 +57,11 @@ jobs:
         working-directory: ./infrastructure/app-infrastructure
         run: |
           terraform init \
-            -backend-config="bucket=${{ secrets.STATE_BUCKET }}" \
+            -backend-config="bucket=${{ secrets.TERRAFORM_STATE_BUCKET }}" \
+            -backend-config="key=app/terraform.tfstate" \
             -backend-config="region=${{ env.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ secrets.LOCK_TABLE }}"
+            -backend-config="encrypt=true" \
+            -backend-config="dynamodb_table=${{ secrets.TERRAFORM_LOCK_TABLE }}"
           terraform plan -var="aws_region=${{ env.AWS_REGION }}" \
                         -var="db_name=${{ secrets.DB_NAME }}" \
                         -var="db_username=${{ secrets.DB_USERNAME }}" \
