@@ -33,6 +33,14 @@ output "ecs_service_name" {
   value = aws_ecs_service.main.name
 }
 
+output "ecs_security_group_id" {
+  value = aws_security_group.ecs_service.id
+}
+
+output "private_subnet_id" {
+  value = aws_subnet.private1.id
+}
+
 output "cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.app_distribution.id
 }
@@ -47,4 +55,8 @@ output "user_pool_id" {
 
 output "user_pool_client_id" {
   value = aws_cognito_user_pool_client.client.id
+}
+
+output "ecs_task_execution_role_arn" {
+  value = aws_iam_role.ecs_task_execution_role.arn
 }

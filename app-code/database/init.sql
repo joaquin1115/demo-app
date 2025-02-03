@@ -819,7 +819,7 @@ CREATE TABLE IF NOT EXISTS reporte (
 
 DO $$
 DECLARE
-    base_path TEXT := :'csv_path';
+    base_path TEXT := '/app/database/data/';
 BEGIN
     EXECUTE 'COPY estado_civil FROM ' || quote_literal(base_path || 'Estado_civil.csv') || ' DELIMITER '','' CSV HEADER';
     EXECUTE 'COPY nacionalidad FROM ' || quote_literal(base_path || 'Nacionalidad.csv') || ' DELIMITER '','' CSV HEADER';
