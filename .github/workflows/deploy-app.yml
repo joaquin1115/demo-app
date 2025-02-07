@@ -65,27 +65,6 @@ jobs:
             -backend-config="encrypt=true" \
             -backend-config="dynamodb_table=${{ secrets.TERRAFORM_LOCK_TABLE }}"
       
-      # Build and deploy backend
-      - name: Build and deploy backend
-        working-directory: ./app-code/backend
-        run: |
-          # Build the application
-          mvn wrapper:wrapper
-          mvn clean package -DskipTests
-          
-          # Get ECR repository URL from Terraform output
-          ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
-          
-          # Build and push Docker image
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPO
-          docker build -t $ECR_REPO:latest .
-          docker push $ECR_REPO:latest
-          
-          # Update ECS service to pick up new image
-          aws ecs update-service --cluster $(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_cluster_name) \
-                                --service $(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_service_name) \
-                                --force-new-deployment
-
       # Build and deploy frontend
       - name: Build and deploy frontend
         working-directory: ./app-code/frontend
@@ -110,6 +89,10 @@ jobs:
 
           # Install dependencies and build
           npm install
+
+          chmod +x ../../scripts/fix-amplify-package.sh
+          ../../scripts/fix-amplify-package.sh
+    
           npm run build
           
           # Get S3 bucket name from Terraform output
