@@ -30,6 +30,7 @@ export const awsConfig: ResourcesConfig = {
         email: {
           required: true,
         },
+        /**
         "custom:employee_id": {
           required: false,
         },
@@ -45,6 +46,7 @@ export const awsConfig: ResourcesConfig = {
         "custom:is_representative": {
           required: false,
         },
+        */
       },
       passwordFormat: {
         minLength: 8,
