@@ -94,6 +94,9 @@ jobs:
           COGNITO_USER_POOL_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw user_pool_id)
           COGNITO_USER_POOL_CLIENT_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw user_pool_client_id)
 
+          # Create the environments directory if it doesn't exist
+          mkdir -p src/environments
+          
           # Create environment file
           cat << EOF > src/environments/environment.prod.ts
           export const environment = {
