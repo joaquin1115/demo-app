@@ -45,6 +45,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          cache: 'maven'
 
       # Setup Terraform
       - name: Setup Terraform
@@ -58,8 +59,8 @@ jobs:
         working-directory: ./app-code/backend
         run: |
           # Build the application
-          chmod +x mvnw
-          ./mvnw clean package -DskipTests
+          mvn wrapper:wrapper
+          mvn clean package -DskipTests
           
           # Get ECR repository URL from Terraform output
           ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
