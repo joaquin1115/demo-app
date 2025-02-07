@@ -93,12 +93,16 @@ jobs:
         working-directory: ./app-code/database
         run: |
           # Get resource values from Terraform outputs
-          DB_ENDPOINT=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw db_endpoint)
           ECS_CLUSTER=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_cluster_name)
           SECURITY_GROUP_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_security_group_id)
           SUBNET_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw private_subnet_id)
           ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
           ECS_TASK_EXECUTION_ROLE_ARN=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_task_execution_role_arn)
+          DB_IDENTIFIER=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw db_identifier)
+          DB_ENDPOINT=$(aws rds describe-db-instances \
+            --db-instance-identifier $DB_IDENTIFIER \
+            --query 'DBInstances[0].Endpoint.Address' \
+            --output text)
 
           aws logs create-log-group --log-group-name "/ecs/db-migration" || true
           
@@ -142,7 +146,7 @@ jobs:
             --overrides '{
               "containerOverrides": [{
                 "name": "db-migration",
-                "command": ["psql", "-h", "'$DB_ENDPOINT'", "-U", "'${{ secrets.DB_USERNAME }}'", "-d", "'${{ secrets.DB_NAME }}'", "-f", "/app/database/init.sql"]
+                "command": ["psql", "-h", "'$DB_ENDPOINT'", "-p", "5432", "-U", "'${{ secrets.DB_USERNAME }}'", "-d", "'${{ secrets.DB_NAME }}'", "-f", "/app/database/init.sql"]
               }]
             }' \
             --query 'tasks[0].taskArn' \
