@@ -121,12 +121,12 @@ jobs:
                     "value": "'${{ secrets.DB_PASSWORD }}'"
                   }
                 ],
-                \"logConfiguration\": {
-                \"logDriver\": \"awslogs\",
-                \"options\": {
-                  \"awslogs-group\": \"/ecs/db-migration\",
-                  \"awslogs-region\": \"${{ env.AWS_REGION }}\",
-                  \"awslogs-stream-prefix\": \"ecs\"
+                "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/db-migration",
+                  "awslogs-region": "${{ env.AWS_REGION }}",
+                  "awslogs-stream-prefix": "ecs"
                   }
                 }
               }
