@@ -34,26 +34,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
-resource "aws_iam_policy" "custom_policy_ecs_task_execution_role" {
-  name        = "CustomPolicyECSTaskExecutionRole"
-  description = "Custom policy for ECS task execution"
-  policy      = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        "Effect": "Allow",
-        "Action": [
-            "ecr:GetAuthorizationToken",
-            "logs:CreateLogStream",
-            "logs:PutLogEvents"
-        ],
-        "Resource": "*"
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy_attachment" {
   role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.custom_policy_ecs_task_execution_role.arn
+  policy_arn = data.aws_iam_policy.AmazonECSTaskExecutionRolePolicy.arn
 }
