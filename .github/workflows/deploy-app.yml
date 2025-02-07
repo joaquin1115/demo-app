@@ -89,7 +89,6 @@ jobs:
           docker build -f Dockerfile.migration -t $MIGRATION_TAG .
           docker push $MIGRATION_TAG
 
-      # Deploy database
       - name: Deploy database
         working-directory: ./app-code/database
         run: |
@@ -100,6 +99,8 @@ jobs:
           SUBNET_ID=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw private_subnet_id)
           ECR_REPO=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecr_repository_url)
           ECS_TASK_EXECUTION_ROLE_ARN=$(terraform -chdir=../../infrastructure/app-infrastructure output -raw ecs_task_execution_role_arn)
+
+          aws logs create-log-group --log-group-name "/ecs/db-migration" || true
           
           # Create a temporary task definition
           TASK_DEF_FAMILY="db-migration-$(date +%s)"
