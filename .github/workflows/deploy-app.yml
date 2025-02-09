@@ -242,7 +242,7 @@ jobs:
             --container-definitions '[
               {
                 "name": "db-migration",
-                "image": "${ECR_REPOSITORY_URL}:migration",
+                "image": "'${ECR_REPOSITORY_URL}:migration'",
                 "essential": true,
                 "environment": [
                   {
