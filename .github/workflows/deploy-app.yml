@@ -32,7 +32,7 @@ jobs:
   infrastructure:
     runs-on: ubuntu-latest
     outputs:
-      ecr_repository_url: ${{ steps.tf-outputs.outputs.ecr_repository_url }}
+      ecr_repository_name: ${{ steps.tf-outputs.outputs.ecr_repository_name }}
       ecs_cluster_name: ${{ steps.tf-outputs.outputs.ecs_cluster_name }}
       ecs_service_name: ${{ steps.tf-outputs.outputs.ecs_service_name }}
       user_pool_id: ${{ steps.tf-outputs.outputs.user_pool_id }}
@@ -50,7 +50,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME_NAME }}"
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
@@ -83,7 +83,7 @@ jobs:
         id: tf-outputs
         working-directory: ${{ env.WORKING_DIR_INFRA }}
         run: |
-          echo "ecr_repository_url=$(terraform output -raw ecr_repository_url)" >> $GITHUB_OUTPUT
+          echo "ecr_repository_name=$(terraform output -raw ecr_repository_name)" >> $GITHUB_OUTPUT
           echo "ecs_cluster_name=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_OUTPUT
           echo "ecs_service_name=$(terraform output -raw ecs_service_name)" >> $GITHUB_OUTPUT
           echo "user_pool_id=$(terraform output -raw user_pool_id)" >> $GITHUB_OUTPUT
@@ -106,7 +106,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME_NAME }}"
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
@@ -126,9 +126,10 @@ jobs:
       - name: Build and Push Docker Image
         working-directory: ${{ env.WORKING_DIR_BACKEND }}
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ needs.infrastructure.outputs.ecr_repository_url }}
-          docker build -t ${{ needs.infrastructure.outputs.ecr_repository_url }}:latest .
-          docker push ${{ needs.infrastructure.outputs.ecr_repository_url }}:latest
+          ECR_REPOSITORY_URL = "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.infrastructure.outputs.ecr_repository_name }}"
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPOSITORY_URL
+          docker build -t $ECR_REPOSITORY_URL:latest .
+          docker push $ECR_REPOSITORY_URL:latest
 
       - name: Update ECS Service
         run: |
@@ -148,7 +149,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME_NAME }}"
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
@@ -199,14 +200,15 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_TO_ASSUME_NAME }}"
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Build and Push Migration Image
         working-directory: ${{ env.WORKING_DIR_DB }}
         run: |
-          MIGRATION_TAG="${{ needs.infrastructure.outputs.ecr_repository_url }}:migration"
+          ECR_REPOSITORY_URL = "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.infrastructure.outputs.ecr_repository_name }}"
+          MIGRATION_TAG="$ECR_REPOSITORY_URL:migration"
           
           cat > Dockerfile.migration << 'EOF'
           FROM postgres:15
@@ -214,13 +216,15 @@ jobs:
           COPY ./data/ /app/database/data/
           EOF
           
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ needs.infrastructure.outputs.ecr_repository_url }}
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPOSITORY_URL
           docker build -f Dockerfile.migration -t $MIGRATION_TAG .
           docker push $MIGRATION_TAG
 
       - name: Run Migration Task
         working-directory: ${{ env.WORKING_DIR_DB }}
         run: |
+          ECR_REPOSITORY_URL = "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.infrastructure.outputs.ecr_repository_name }}"
+          
           DB_ENDPOINT=$(aws rds describe-db-instances \
             --db-instance-identifier ${{ needs.infrastructure.outputs.db_identifier }} \
             --query 'DBInstances[0].Endpoint.Address' \
@@ -237,7 +241,7 @@ jobs:
             --container-definitions '[
               {
                 "name": "db-migration",
-                "image": "${{ needs.infrastructure.outputs.ecr_repository_url }}:migration",
+                "image": "$ECR_REPOSITORY_URL:migration",
                 "essential": true,
                 "environment": [
                   {
