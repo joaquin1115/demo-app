@@ -181,7 +181,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR_FRONTEND }}
         run: |
           PROJECT_NAME=$(jq -r '.projects | keys | .[0]' angular.json)
-          OUTPUT_PATH=$(jq -r ".projects[\"$PROJECT_NAME\"].architect.build.options.outputPath" angular.json)
+          OUTPUT_PATH="$(jq -r ".projects[\"$PROJECT_NAME\"].architect.build.options.outputPath" angular.json)/browser"
           
           aws s3 sync $OUTPUT_PATH/ s3://${{ needs.infrastructure.outputs.frontend_bucket_name }}/
           
