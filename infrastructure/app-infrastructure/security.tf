@@ -99,9 +99,9 @@ resource "aws_security_group" "rds_sg" {
 }
 
 resource "aws_security_group" "vpc_endpoints" {
-  name_prefix = "${var.env}-vpc-endpoints"
+  name_prefix = "${var.environment}-vpc-endpoints"
   description = "Associated to ECR/s3 VPC Endpoints"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description     = "Allow ECS service to pull images from ECR via VPC endpoints"
