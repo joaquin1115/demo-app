@@ -170,15 +170,11 @@ jobs:
             }
           };
           EOF
-
-          echo "1"
-          npm install --verbose
-          echo "2"
+          
+          npm install
           chmod +x ../../scripts/fix-amplify-package.sh
           ../../scripts/fix-amplify-package.sh
-          echo "3"
           npm run build
-          echo "4"
 
       - name: Deploy to S3 and Invalidate Cache
         working-directory: ${{ env.WORKING_DIR_FRONTEND }}
