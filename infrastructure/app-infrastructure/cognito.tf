@@ -69,6 +69,7 @@ resource "aws_cognito_user_pool" "main" {
     required                = false
   }
 
+  username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 }
 
