@@ -132,3 +132,17 @@ resource "aws_vpc_endpoint" "s3" {
     "Name" = "${var.environment}-s3"
   }
 }
+
+resource "aws_vpc_endpoint" "cloudwatch_logs" {
+  vpc_id              = aws_vpc.main.id
+  service_name        = "com.amazonaws.${var.aws_region}.logs"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = true
+
+  security_group_ids = [aws_security_group.vpc_endpoints.id]
+  subnet_ids         = [aws_subnet.private1.id, aws_subnet.private2.id]
+
+  tags = {
+    "Name" = "${var.environment}-cloudwatch-logs"
+  }
+}
