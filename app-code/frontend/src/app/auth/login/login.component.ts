@@ -47,24 +47,7 @@ export class LoginComponent implements OnInit{
           userAttributes: {
             email: {
               required: true,
-            },
-            /**
-            "custom:employee_id": {
-              required: false,
-            },
-            "custom:dni": {
-              required: false,
-            },
-            "custom:area": {
-              required: false,
-            },
-            "custom:position": {
-              required: false,
-            },
-            "custom:is_representative": {
-              required: false,
-            },
-            */
+            }
           },
           passwordFormat: {
             minLength: 8,
