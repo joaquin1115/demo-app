@@ -69,6 +69,8 @@ jobs:
             -backend-config="region=${{ env.AWS_REGION }}" \
             -backend-config="encrypt=true" \
             -backend-config="dynamodb_table=${{ secrets.TERRAFORM_LOCK_TABLE }}"
+
+          terraform force-unlock -force 1db58271-68d7-db53-240c-75cd15ba88f1
           
           terraform plan \
             -var="aws_region=${{ env.AWS_REGION }}" \
