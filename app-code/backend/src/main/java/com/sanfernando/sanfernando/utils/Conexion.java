@@ -7,36 +7,27 @@ import java.sql.SQLException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Service
 public class Conexion {
 
     private Connection con;
 
-    @Value("${DB_HOST:localhost}")
-    private String dbHost;
+    @Value("${spring.datasource.url}")
+    private String url;
 
-    @Value("${DB_PORT:5432}")
-    private String dbPort;
-
-    @Value("${DB_DATABASE:san-fernando-db}")
-    private String dbName;
-
-    @Value("${DB_USERNAME:postgres}")
+    @Value("${spring.datasource.username}")
     private String username;
 
-    @Value("${DB_PASSWORD:123456}")
+    @Value("${spring.datasource.password}")
     private String password;
 
     public void startConexion() {
         try {
-            String url = String.format("jdbc:postgresql://%s:%s/%s", dbHost, dbPort, dbName);
             Connection con = DriverManager.getConnection(url, username, password);
             this.con = con;
         } catch (SQLException e) {
