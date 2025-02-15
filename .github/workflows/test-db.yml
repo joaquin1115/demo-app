@@ -25,6 +25,9 @@ jobs:
   deploy-db-migration:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
       - name: Generate INSERT-based migration script
         working-directory: ${{ env.WORKING_DIR_DB }}
         run: |
