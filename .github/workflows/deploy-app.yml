@@ -229,6 +229,8 @@ jobs:
             --db-instance-identifier ${{ needs.infrastructure.outputs.db_identifier }} \
             --query 'DBInstances[0].Endpoint.Address' \
             --output text)
+
+          aws logs create-log-group --log-group-name "/ecs/db-migration" || true
           
           TASK_DEF_FAMILY="db-migration-$(date +%s)"
           aws ecs register-task-definition \
@@ -248,7 +250,15 @@ jobs:
                     "name": "PGPASSWORD",
                     "value": "'${{ secrets.DB_PASSWORD }}'"
                   }
-                ]
+                ],
+                "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                  "awslogs-group": "/ecs/db-migration",
+                  "awslogs-region": "${{ env.AWS_REGION }}",
+                  "awslogs-stream-prefix": "ecs"
+                  }
+                }
               }
             ]'
           
