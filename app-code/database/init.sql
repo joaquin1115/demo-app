@@ -821,7 +821,7 @@ DO $$
 DECLARE 
     base_path TEXT;
 BEGIN
-    base_path := '/home/runner/work/demo-app/demo-app/app-code/database/data/';
+    base_path := '/var/lib/postgresql/data/';
 
     EXECUTE 'COPY estado_civil FROM ' || quote_literal(base_path || 'Estado_civil.csv') || ' DELIMITER '','' CSV HEADER';
     EXECUTE 'COPY nacionalidad FROM ' || quote_literal(base_path || 'Nacionalidad.csv') || ' DELIMITER '','' CSV HEADER';
