@@ -817,12 +817,12 @@ CREATE TABLE IF NOT EXISTS reporte (
 
 /* CARGA DE DATOS */
 
-\set csv_path `echo "$csv_path"`
-DO $$ 
+DO $$
 DECLARE 
     base_path TEXT;
 BEGIN
-    base_path := :'csv_path';
+    base_path := current_setting('csv_path', true);
+    RAISE NOTICE 'Base path: %', base_path;
 BEGIN
     EXECUTE 'COPY estado_civil FROM ' || quote_literal(base_path || 'Estado_civil.csv') || ' DELIMITER '','' CSV HEADER';
     EXECUTE 'COPY nacionalidad FROM ' || quote_literal(base_path || 'Nacionalidad.csv') || ' DELIMITER '','' CSV HEADER';

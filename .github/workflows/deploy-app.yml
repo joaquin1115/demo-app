@@ -212,19 +212,22 @@ jobs:
         run: |
           # Start PostgreSQL service
           sudo service postgresql start
-          
+
           # Create temporary database
           sudo -u postgres createdb temp_migration_db
 
           # Get absolute path of the csv files
           CSV_PATH="$(pwd)/data/"
-          
-          # Import database creation script
-          sudo -u postgres psql temp_migration_db -v csv_path="$CSV_PATH" < ./init.sql
-          
+
+          # Import database creation script with PGOPTIONS
+          sudo -u postgres psql temp_migration_db <<EOF
+          SET csv_path TO '$CSV_PATH';
+          \i ./init.sql
+          EOF
+
           # Create new dump with INSERT statements
           sudo -u postgres pg_dump --column-inserts temp_migration_db > ./migration.sql
-          
+
           # Clean up
           sudo -u postgres dropdb temp_migration_db
     
