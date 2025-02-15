@@ -318,4 +318,6 @@ jobs:
     needs: [build-backend, build-frontend, database-migration]
     steps:
       - name: Check Deployment Status
-        run: echo "All components have been deployed successfully"
+        run: |
+          echo "Frontend URL: https://${{ needs.infrastructure.outputs.app_domain }}"
+          echo "All components have been deployed successfully"
