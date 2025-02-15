@@ -1,0 +1,51 @@
+name: Run Database Migration
+
+# Trigger configuration
+on:
+  workflow_dispatch:  # Manual trigger
+  # Uncomment below to enable automated deployments
+  # push:
+  #   branches: [main]
+  #   paths: ["infrastructure/app-infrastructure/**"]
+  # pull_request:
+  #   branches: [main]
+  #   paths: ["infrastructure/app-infrastructure/**"]
+
+# Environment variables
+env:
+  WORKING_DIR_DB: "./app-code/database"
+
+# Required permissions
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  # Infrastructure deployment job
+  deploy-db-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate INSERT-based migration script
+        working-directory: ${{ env.WORKING_DIR_DB }}
+        run: |
+          # Start PostgreSQL service
+          sudo service postgresql start
+
+          # Create temporary database
+          sudo -u postgres createdb temp_migration_db
+
+          # Get absolute path of the csv files
+          CSV_PATH="$(pwd)/data/"
+          echo "CSV_PATH=$CSV_PATH"
+
+          # Import database creation script with PGOPTIONS
+          sudo -u postgres psql temp_migration_db <<EOF
+          SET csv_path TO '$CSV_PATH';
+          \i ./init.sql
+          EOF
+
+          # Create new dump with INSERT statements
+          sudo -u postgres pg_dump --column-inserts temp_migration_db > ./migration.sql
+
+          # Clean up
+          sudo -u postgres dropdb temp_migration_db
