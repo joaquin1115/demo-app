@@ -203,6 +203,24 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Generate INSERT-based migration script
+        working-directory: ${{ env.WORKING_DIR_DB }}
+        run: |
+          # Start PostgreSQL service
+          sudo service postgresql start
+          
+          # Create temporary database
+          sudo -u postgres createdb temp_migration_db
+          
+          # Import database creation script
+          sudo -u postgres psql temp_migration_db < ./init.sql
+          
+          # Create new dump with INSERT statements
+          sudo -u postgres pg_dump --column-inserts temp_migration_db > ./migration.sql
+          
+          # Clean up
+          sudo -u postgres dropdb temp_migration_db
+    
       - name: Build and Push Migration Image
         working-directory: ${{ env.WORKING_DIR_DB }}
         run: |
@@ -211,8 +229,7 @@ jobs:
           
           cat > Dockerfile.migration << 'EOF'
           FROM postgres:15
-          COPY ./init.sql /app/database/
-          COPY ./data/ /app/database/data/
+          COPY ./migration.sql /app/database/
           EOF
           
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REPOSITORY_URL
@@ -270,7 +287,7 @@ jobs:
             --overrides '{
               "containerOverrides": [{
                 "name": "db-migration",
-                "command": ["psql", "-h", "'$DB_ENDPOINT'", "-p", "5432", "-U", "'${{ secrets.DB_USERNAME }}'", "-d", "'${{ secrets.DB_NAME }}'", "-f", "/app/database/init.sql"]
+                "command": ["psql", "-h", "'$DB_ENDPOINT'", "-p", "5432", "-U", "'${{ secrets.DB_USERNAME }}'", "-d", "'${{ secrets.DB_NAME }}'", "-f", "/app/database/migration.sql"]
               }]
             }' \
             --query 'tasks[0].taskArn' \
