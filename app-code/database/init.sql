@@ -823,7 +823,7 @@ DECLARE
 BEGIN
     base_path := current_setting('csv_path', true);
     RAISE NOTICE 'Base path: %', base_path;
-BEGIN
+    
     EXECUTE 'COPY estado_civil FROM ' || quote_literal(base_path || 'Estado_civil.csv') || ' DELIMITER '','' CSV HEADER';
     EXECUTE 'COPY nacionalidad FROM ' || quote_literal(base_path || 'Nacionalidad.csv') || ' DELIMITER '','' CSV HEADER';
     EXECUTE 'COPY genero FROM ' || quote_literal(base_path || 'Genero.csv') || ' DELIMITER '','' CSV HEADER';
