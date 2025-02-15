@@ -196,6 +196,22 @@ jobs:
   database-migration:
     runs-on: ubuntu-latest
     needs: infrastructure
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: temp_migration_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+          --hostname postgres
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -210,26 +226,22 @@ jobs:
       - name: Generate INSERT-based migration script
         working-directory: ${{ env.WORKING_DIR_DB }}
         run: |
-          # Start PostgreSQL service
-          sudo service postgresql start
+          # Wait for PostgreSQL to be ready
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
 
-          # Create temporary database
-          sudo -u postgres createdb temp_migration_db
+          # Copy CSV files to container
+          docker cp ./init.sql postgres:/var/lib/postgresql/data/
+          docker cp ./data/. postgres:/var/lib/postgresql/data/
 
-          # Get absolute path of the csv files
-          CSV_PATH="$(pwd)/data/"
+          # Run migration script inside PostgreSQL container
+          docker exec -u postgres postgres psql -d temp_migration_db -f /var/lib/postgresql/data/init.sql
 
-          # Import database creation script with PGOPTIONS
-          sudo -u postgres psql temp_migration_db <<EOF
-          SET csv_path TO '$CSV_PATH';
-          \i ./init.sql
-          EOF
-
-          # Create new dump with INSERT statements
-          sudo -u postgres pg_dump --column-inserts temp_migration_db > ./migration.sql
-
-          # Clean up
-          sudo -u postgres dropdb temp_migration_db
+          # Generate database dump
+          docker exec -u postgres postgres pg_dump --column-inserts -d temp_migration_db > migration.sql
     
       - name: Build and Push Migration Image
         working-directory: ${{ env.WORKING_DIR_DB }}
