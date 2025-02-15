@@ -270,7 +270,7 @@ jobs:
                 "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                  "awslogs-group": "${DB_MIGRATION_LOG_GROUP_NAME}",
+                  "awslogs-group": "'${DB_MIGRATION_LOG_GROUP_NAME}'",
                   "awslogs-region": "${{ env.AWS_REGION }}",
                   "awslogs-stream-prefix": "ecs"
                   }
