@@ -54,7 +54,7 @@ jobs:
           echo "PostgreSQL is ready!"
 
           # Copy CSV files to container
-          docker cp ./app-code/database/data postgres:/var/lib/postgresql/data/
+          docker cp ./data postgres:/var/lib/postgresql/data/
 
           # Run migration script inside PostgreSQL container
           docker exec -u postgres postgres psql -d temp_migration_db -f /var/lib/postgresql/data/init.sql
