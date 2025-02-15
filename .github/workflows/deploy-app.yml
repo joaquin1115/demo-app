@@ -42,7 +42,9 @@ jobs:
       ecs_security_group_id: ${{ steps.tf-outputs.outputs.ecs_security_group_id }}
       private_subnet_id: ${{ steps.tf-outputs.outputs.private_subnet_id }}
       ecs_task_execution_role_name: ${{ steps.tf-outputs.outputs.ecs_task_execution_role_name }}
-      db_identifier: ${{ steps.tf-outputs.outputs.db_identifier }}
+      db_address: ${{ steps.tf-outputs.outputs.db_address }}
+      app_domain: ${{ steps.tf-outputs.outputs.app_domain }}
+      db_migration_log_group_name: ${{ steps.tf-outputs.outputs.db_migration_log_group_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -93,7 +95,9 @@ jobs:
           echo "ecs_security_group_id=$(terraform output -raw ecs_security_group_id)" >> $GITHUB_OUTPUT
           echo "private_subnet_id=$(terraform output -raw private_subnet_id)" >> $GITHUB_OUTPUT
           echo "ecs_task_execution_role_name=$(terraform output -raw ecs_task_execution_role_name)" >> $GITHUB_OUTPUT
-          echo "db_identifier=$(terraform output -raw db_identifier)" >> $GITHUB_OUTPUT
+          echo "db_address=$(terraform output -raw db_address)" >> $GITHUB_OUTPUT
+          echo "app_domain=$(terraform output -raw app_domain)" >> $GITHUB_OUTPUT
+          echo "db_migration_log_group_name=$(terraform output -raw db_migration_log_group_name)" >> $GITHUB_OUTPUT
 
   # Backend build job - can run in parallel with frontend build
   build-backend:
@@ -241,14 +245,9 @@ jobs:
         run: |
           ECR_REPOSITORY_URL="${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ needs.infrastructure.outputs.ecr_repository_name }}"
           ECS_TASK_EXECUTION_ROLE_ARN="arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ needs.infrastructure.outputs.ecs_task_execution_role_name }}"
-          
-          DB_ENDPOINT=$(aws rds describe-db-instances \
-            --db-instance-identifier ${{ needs.infrastructure.outputs.db_identifier }} \
-            --query 'DBInstances[0].Endpoint.Address' \
-            --output text)
+          DB_MIGRATION_LOG_GROUP_NAME="${{ needs.infrastructure.outputs.db_migration_log_group_name }}"
+          DB_ENDPOINT="${{ needs.infrastructure.outputs.db_address }}"
 
-          aws logs create-log-group --log-group-name "/ecs/db-migration" || true
-          
           TASK_DEF_FAMILY="db-migration-$(date +%s)"
           aws ecs register-task-definition \
             --family $TASK_DEF_FAMILY \
@@ -271,7 +270,7 @@ jobs:
                 "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                  "awslogs-group": "/ecs/db-migration",
+                  "awslogs-group": "${DB_MIGRATION_LOG_GROUP_NAME}",
                   "awslogs-region": "${{ env.AWS_REGION }}",
                   "awslogs-stream-prefix": "ecs"
                   }

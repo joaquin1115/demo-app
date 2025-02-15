@@ -21,8 +21,8 @@ output "app_domain" {
   value = aws_cloudfront_distribution.app_distribution.domain_name
 }
 
-output "db_identifier" {
-  value = aws_db_instance.appdb.identifier
+output "db_address" {
+  value = aws_db_instance.appdb.address
 }
 
 output "ecs_cluster_name" {
